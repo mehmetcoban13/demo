@@ -8,7 +8,7 @@ import lombok.Setter;
 public class RequestSaveCustomer {
     private String name;
     private String surname;
-    private String identityNo;
+    private Long identityNo;
     private String password;
     private String email;
     private String phoneNumber;

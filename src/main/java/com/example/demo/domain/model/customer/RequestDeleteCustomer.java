@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class RequestDeleteCustomer {
     private Long customerId;
-    private String identityNo;
+    private Long identityNo;
 }

@@ -62,18 +62,19 @@ public class AccountService {
         Account account = new Account();
         account.setCustomerId(request.getCustomerId());
         account.setCurrentBalance(request.getCurrentBalance());
-        account.setAccountTypeEnum(request.getAccountTypeEnum());
-        account.setCurrencyTypeEnum(request.getCurrencyTypeEnum());
+        account.setAccountType(request.getAccountTypeEnum());
+        account.setCurrencyType(request.getCurrencyTypeEnum());
         account = repository.save(account);
 
-        String accountNumber = String.format("%0" + accountNumberLength + "d", String.valueOf(account.getId()));
+        String accountNumber = "0".repeat(accountNumberLength) + String.valueOf(account.getId());
+        accountNumber = accountNumber.substring(accountNumber.length() - accountNumberLength);
         String ibanNo = IBAN_PREFIX + BANK_CODE + BRANCH_CODE + IBAN_ZEROS + accountNumber;
         
         account.setIbanNo(ibanNo);
         repository.save(account);
 
         response.setSuccess(true);
-        response.setMessage("The account is successfully created! \nAccount ID: " + account.getId() + " \nIBAN: " + account.getIbanNo());
+        response.setMessage("The account is successfully created! Account ID: " + account.getId() + " || IBAN: " + account.getIbanNo());
         return response;
     }
     
@@ -85,7 +86,7 @@ public class AccountService {
                 response.setSuccess(true);
                 response.setMessage("The account is successfully deleted!");
             }
-            else if(null != request.getIbanNo() && request.getIbanNo().isEmpty()){
+            else if(null != request.getIbanNo() && !request.getIbanNo().isEmpty()){
                 Account account = repository.findByIbanNo(request.getIbanNo());
                 if(null != account){
                     repository.delete(account);
@@ -152,8 +153,8 @@ public class AccountService {
         }
 
         if(account.getCurrentBalance().compareTo(request.getWithdrawAmount()) == -1){
-            response.setMessage("The current balance is " + account.getCurrentBalance() + " " + account.getCurrencyTypeEnum().toString() + 
-                                "\n The withdraw amount must not be greater than the current balance!");
+            response.setMessage("The current balance is " + account.getCurrentBalance() + " " + account.getCurrencyType().toString() + 
+                                " || The withdraw amount must not be greater than the current balance!");
             response.setSuccess(false);
             return response;
         }
@@ -162,7 +163,7 @@ public class AccountService {
         account = repository.save(account);
         response.setSuccess(true);
         response.setMessage("The amount of " + request.getWithdrawAmount() + " is substracted from the account. " + 
-                            "\n Current Balance: " + account.getCurrentBalance() + " " + account.getCurrencyTypeEnum().toString());
+                            "|| Current Balance: " + account.getCurrentBalance() + " " + account.getCurrencyType().toString());
         return response;
     }
     
@@ -201,7 +202,7 @@ public class AccountService {
         account = repository.save(account);
         response.setSuccess(true);
         response.setMessage("The amount of " + request.getDepositAmount() + " is added to the account. " + 
-                            "\n Current Balance: " + account.getCurrentBalance() + " " + account.getCurrencyTypeEnum().toString());
+                            "|| Current Balance: " + account.getCurrentBalance() + " " + account.getCurrencyType().toString());
         return response;
     }
 }
