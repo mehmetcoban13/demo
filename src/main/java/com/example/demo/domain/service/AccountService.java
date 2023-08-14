@@ -121,11 +121,54 @@ public class AccountService {
     }
 
     public ResponseGenericForAccount withdrawMoney(RequestWithdrawMoneyFromAccount request){
-        return null;
+        ResponseGenericForAccount response = new ResponseGenericForAccount();
+        Account account = null;
+        if(null == request){
+            response.setMessage("Request must not be null!");
+            response.setSuccess(false);
+            return response;
+        }
+        if(null == request.getAccountId() && (null == request.getIbanNo() || request.getIbanNo().isEmpty())){
+            response.setMessage("Request must contain at least one of them: accountId or ibanNo!");
+            response.setSuccess(false);
+            return response;
+        }
+        if(null == request.getWithdrawAmount() || BigDecimal.ZERO.compareTo(request.getWithdrawAmount()) != -1){
+            response.setMessage("Withdraw amount must be greater than zero!");
+            response.setSuccess(false);
+            return response;
+        }
+
+        if(null != request.getAccountId()) {
+            account = repository.findById(request.getAccountId()).orElse(null);
+        } else if(null != request.getIbanNo()){
+            account = repository.findByIbanNo(request.getIbanNo());
+        }
+        
+        if(null == account){
+            response.setMessage("No such account found, please check your request!");
+            response.setSuccess(false);
+            return response;
+        }
+
+        if(account.getCurrentBalance().compareTo(request.getWithdrawAmount()) == -1){
+            response.setMessage("The current balance is " + account.getCurrentBalance() + " " + account.getCurrencyTypeEnum().toString() + 
+                                "\n The withdraw amount must not be greater than the current balance!");
+            response.setSuccess(false);
+            return response;
+        }
+        
+        account.setCurrentBalance(account.getCurrentBalance().subtract(request.getWithdrawAmount()));
+        account = repository.save(account);
+        response.setSuccess(true);
+        response.setMessage("The amount of " + request.getWithdrawAmount() + " is substracted from the account. " + 
+                            "\n Current Balance: " + account.getCurrentBalance() + " " + account.getCurrencyTypeEnum().toString());
+        return response;
     }
     
     public ResponseGenericForAccount depositMoney(RequestDepositMoneyToAccount request){
         ResponseGenericForAccount response = new ResponseGenericForAccount();
+        Account account = null;
         if(null == request){
             response.setMessage("Request must not be null!");
             response.setSuccess(false);
@@ -143,8 +186,22 @@ public class AccountService {
         }
 
         if(null != request.getAccountId()) {
-            
+            account = repository.findById(request.getAccountId()).orElse(null);
+        } else if(null != request.getIbanNo()){
+            account = repository.findByIbanNo(request.getIbanNo());
         }
-        return null;
+        
+        if(null == account){
+            response.setMessage("No such account found, please check your request!");
+            response.setSuccess(false);
+            return response;
+        }
+        
+        account.setCurrentBalance(account.getCurrentBalance().add(request.getDepositAmount()));
+        account = repository.save(account);
+        response.setSuccess(true);
+        response.setMessage("The amount of " + request.getDepositAmount() + " is added to the account. " + 
+                            "\n Current Balance: " + account.getCurrentBalance() + " " + account.getCurrencyTypeEnum().toString());
+        return response;
     }
 }
